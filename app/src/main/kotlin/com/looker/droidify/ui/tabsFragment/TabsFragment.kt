@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -19,6 +20,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.adapter.FragmentStateAdapter
@@ -51,17 +53,28 @@ import com.looker.droidify.widget.FocusSearchView
 import com.looker.droidify.widget.StableRecyclerAdapter
 import com.looker.droidify.widget.addDivider
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
+import kotlin.reflect.jvm.internal.impl.types.TypeCheckerState.SupertypesPolicy.None
 
 @AndroidEntryPoint
 class TabsFragment : ScreenFragment() {
+
+    enum class BackAction {
+        ProductAll,
+        CollapseSearchView,
+        HideSections,
+        None,
+    }
 
     private var _tabsBinding: TabsToolbarBinding? = null
     private val tabsBinding get() = _tabsBinding!!
 
     private val viewModel: TabsViewModel by viewModels()
+    private val backAction = MutableStateFlow(BackAction.None)
+
 
     companion object {
         private const val STATE_SEARCH_FOCUSED = "searchFocused"
@@ -85,6 +98,7 @@ class TabsFragment : ScreenFragment() {
     private var sectionsList: RecyclerView? = null
     private var sectionsAdapter: SectionsAdapter? = null
     private var viewPager: ViewPager2? = null
+    private var onBackPressedCallback: OnBackPressedCallback? = null
 
     private var showSections = false
         set(value) {
@@ -99,6 +113,7 @@ class TabsFragment : ScreenFragment() {
                 if (((sectionsList?.parent as? View)?.height ?: 0) > 0) {
                     animateSectionsList()
                 }
+                updateBackAction()
             }
         }
 
@@ -179,6 +194,17 @@ class TabsFragment : ScreenFragment() {
                 .setShowAsActionFlags(
                     MenuItem.SHOW_AS_ACTION_ALWAYS or MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW
                 )
+                .setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
+                    override fun onMenuItemActionExpand(item: MenuItem): Boolean {
+                        updateBackAction()
+                        return true
+                    }
+
+                    override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
+                        updateBackAction()
+                        return true
+                    }
+                })
 
             syncRepositoriesMenuItem = add(0, 0, 0, stringRes.sync_repositories)
                 .setIcon(toolbar.context.getMutatedIcon(CommonR.drawable.ic_sync))
@@ -271,6 +297,11 @@ class TabsFragment : ScreenFragment() {
                         viewPager?.isUserInputEnabled = it
                     }
                 }
+                launch {
+                    backAction.collect {
+                        onBackPressedCallback?.isEnabled = it != BackAction.None
+                    }
+                }
             }
         }
 
@@ -317,6 +348,17 @@ class TabsFragment : ScreenFragment() {
                 }
             }
         }
+        onBackPressedCallback = object : OnBackPressedCallback(enabled = false) {
+            override fun handleOnBackPressed() {
+                performOnBackPressed()
+            }
+        }
+        onBackPressedCallback?.let {
+            requireActivity().onBackPressedDispatcher.addCallback(
+                viewLifecycleOwner,
+                it,
+            )
+        }
     }
 
     override fun onDestroyView() {
@@ -336,6 +378,8 @@ class TabsFragment : ScreenFragment() {
         sectionsAnimator = null
 
         _tabsBinding = null
+        backAction.value = BackAction.None
+        onBackPressedCallback = null
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -356,30 +400,51 @@ class TabsFragment : ScreenFragment() {
         }
     }
 
-    override fun onBackPressed(): Boolean {
-        return when {
-            viewModel.currentSection.value != ProductItem.Section.All -> {
+    private fun performOnBackPressed() {
+        when(calcBackAction()) {
+            BackAction.ProductAll -> {
                 viewModel.setSection(ProductItem.Section.All)
-                true
             }
 
-            searchMenuItem?.isActionViewExpanded == true -> {
+            BackAction.CollapseSearchView -> {
                 searchMenuItem?.collapseActionView()
-                true
             }
 
-            showSections -> {
+            BackAction.HideSections -> {
                 showSections = false
-                true
             }
 
-            else -> {
-                super.onBackPressed()
+            BackAction.None -> {
+                // never should be called
             }
         }
     }
 
     internal fun selectUpdates() = selectUpdatesInternal(true)
+
+    fun updateBackAction() {
+        viewLifecycleOwner.lifecycleScope.launch { backAction.value = calcBackAction() }
+    }
+
+    private fun calcBackAction(): BackAction {
+        return when {
+            viewModel.currentSection.value != ProductItem.Section.All -> {
+                BackAction.ProductAll
+            }
+
+            searchMenuItem?.isActionViewExpanded == true -> {
+                BackAction.CollapseSearchView
+            }
+
+            showSections -> {
+                BackAction.HideSections
+            }
+
+            else -> {
+                BackAction.None
+            }
+        }
+    }
 
     private fun updateUpdateNotificationBlocker(activeSource: AppListFragment.Source) {
         val blockerFragment = if (activeSource == AppListFragment.Source.UPDATES) {
@@ -423,6 +488,7 @@ class TabsFragment : ScreenFragment() {
             is ProductItem.Section.Repository -> section.name
         }
         productFragments.filter { it.source.sections }.forEach { it.setSection(section) }
+        updateBackAction()
     }
 
     private fun animateSectionsList() {

@@ -10,6 +10,7 @@ import com.looker.core.datastore.model.SortOrder
 import com.looker.core.domain.ProductItem
 import com.looker.droidify.database.Database
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
