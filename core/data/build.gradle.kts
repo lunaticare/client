@@ -15,10 +15,9 @@ dependencies {
         Modules.coreDatastore,
         Modules.coreDI,
         Modules.coreDomain,
-        Modules.coreNetwork
+        Modules.coreNetwork,
+        Modules.sync,
     )
 
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.fdroid.index)
-    implementation(libs.fdroid.download)
 }

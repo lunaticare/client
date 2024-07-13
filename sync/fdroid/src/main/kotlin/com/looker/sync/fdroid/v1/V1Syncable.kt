@@ -3,24 +3,24 @@ package com.looker.sync.fdroid.v1
 import com.looker.core.domain.Parser
 import com.looker.core.domain.Syncable
 import com.looker.core.domain.model.App
-import com.looker.core.domain.model.Fingerprint
 import com.looker.core.domain.model.Repo
 import com.looker.network.Downloader
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.fdroid.index.IndexConverter
-import org.fdroid.index.v1.IndexV1
 import java.io.File
 import java.util.Date
 
-class V1Syncable(override val downloader: Downloader) : Syncable<Pair<Fingerprint, IndexV1>> {
-    override val parser: Parser<Pair<Fingerprint, IndexV1>>
-        get() = V1Parser()
+class V1Syncable(
+    private val downloader: Downloader,
+    private val dispatcher: CoroutineDispatcher,
+) : Syncable<String> {
+    override val parser: Parser<String>
+        get() = V1Parser(dispatcher)
 
     override suspend fun sync(repo: Repo): Pair<Repo, List<App>> = withContext(Dispatchers.IO) {
         val jar = downloadIndex(repo)
-        val (fingerprint, indexV1) = parser.parse(jar)
-        val indexV2 = IndexConverter().toIndexV2(indexV1)
+        val (fingerprint, indexV1) = parser.parse(jar, repo)
         TODO("Not yet implemented")
     }
 

@@ -2,8 +2,6 @@ package com.looker.core.domain
 
 import com.looker.core.domain.model.App
 import com.looker.core.domain.model.Repo
-import com.looker.network.Downloader
-import java.io.File
 
 /**
  * Expected Architecture: [https://excalidraw.com/#json=JqpGunWTJONjq-ecDNiPg,j9t0X4coeNvIG7B33GTq6A]
@@ -13,16 +11,10 @@ import java.io.File
  */
 interface Syncable<T> {
 
-    val downloader: Downloader
-
     val parser: Parser<T>
 
-    suspend fun sync(repo: Repo): Pair<Repo, List<App>>
-
-}
-
-interface Parser<out T> {
-
-    suspend fun parse(downloadedFile: File): T
+    suspend fun sync(
+        repo: Repo,
+    ): Pair<Repo, List<App>>
 
 }

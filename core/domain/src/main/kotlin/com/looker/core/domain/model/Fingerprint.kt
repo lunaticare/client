@@ -1,6 +1,6 @@
 package com.looker.core.domain.model
 
-import com.looker.core.common.hex
+import com.looker.core.domain.model.Fingerprint.Companion.hex
 import java.security.MessageDigest
 import java.security.cert.Certificate
 import java.util.Locale
@@ -9,15 +9,11 @@ import java.util.Locale
 value class Fingerprint(val value: String) {
 
     init {
-        if (value.length != DEFAULT_LENGTH) error("Invalid Fingerprint: $value")
+        require(value.isNotBlank() && value.length == DEFAULT_LENGTH) { "Invalid Fingerprint: $value" }
     }
 
-    inline fun isBlank(): Boolean = value.isBlank()
-    inline fun isNotBlank(): Boolean = value.isNotBlank()
-
     inline fun check(other: Fingerprint): Boolean {
-        return other.isNotBlank() && isNotBlank()
-            && other.value.equals(value, ignoreCase = true)
+        return other.value.equals(value, ignoreCase = true)
     }
 
     override fun toString(): String {
@@ -25,10 +21,13 @@ value class Fingerprint(val value: String) {
             .take(DEFAULT_LENGTH / 2).joinToString(separator = " ") { it.uppercase(Locale.US) }
     }
 
-    private companion object {
+    internal companion object {
         const val DEFAULT_LENGTH = 64
-    }
 
+        fun ByteArray.hex(): String = joinToString(separator = "") { byte ->
+            "%02x".format(Locale.US, byte.toInt() and 0xff)
+        }
+    }
 }
 
 fun Certificate.fingerprint(): Fingerprint {

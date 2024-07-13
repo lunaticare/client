@@ -1,14 +1,12 @@
 package com.looker.network
 
-import com.looker.core.common.DataSize
-import com.looker.core.common.extension.exceptCancellation
-import com.looker.core.common.extension.size
-import com.looker.core.common.signature.FileValidator
-import com.looker.core.common.signature.ValidationException
 import com.looker.network.Downloader.Companion.CONNECTION_TIMEOUT
 import com.looker.network.Downloader.Companion.SOCKET_TIMEOUT
+import com.looker.network.Downloader.Companion.USER_AGENT
 import com.looker.network.header.HeadersBuilder
 import com.looker.network.header.KtorHeadersBuilder
+import com.looker.network.validation.FileValidator
+import com.looker.network.validation.ValidationException
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.okhttp.OkHttp
@@ -30,6 +28,7 @@ import io.ktor.http.etag
 import io.ktor.http.isSuccess
 import io.ktor.http.lastModified
 import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.CancellationException
 import io.ktor.utils.io.core.ByteReadPacket
 import io.ktor.utils.io.core.isEmpty
 import io.ktor.utils.io.core.readBytes
@@ -95,7 +94,7 @@ internal class KtorDownloader : Downloader {
             target.delete()
             NetworkResponse.Error.Validation(e)
         } catch (e: Exception) {
-            e.exceptCancellation()
+            if (e is CancellationException) throw e
             NetworkResponse.Error.Unknown(e)
         }
     }
@@ -109,9 +108,6 @@ internal class KtorDownloader : Downloader {
                 engine { this.proxy = proxy }
             }
         }
-
-        const val USER_AGENT =
-            "Droid-ify, Mode: ${BuildConfig.BUILD_TYPE}, Version: ${BuildConfig.VERSION_NAME}"
 
         fun HttpClientConfig<OkHttpConfig>.userAgentConfig() = install(UserAgent) {
             agent = USER_AGENT

@@ -83,7 +83,7 @@ dependencies {
         Modules.coreNetwork,
         Modules.coreDatastore,
         Modules.coreDI,
-        Modules.installer
+        Modules.installer,
     )
 
     implementation(libs.android.material)
@@ -99,4 +99,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.jackson.core)
     implementation(libs.image.viewer)
+
+//    debugImplementation(libs.leakcanary)
 }

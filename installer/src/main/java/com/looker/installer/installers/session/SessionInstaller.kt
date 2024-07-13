@@ -9,11 +9,11 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import com.looker.core.common.PackageName
 import com.looker.core.common.SdkCheck
 import com.looker.core.common.cache.Cache
 import com.looker.core.common.log
 import com.looker.core.common.sdkAbove
+import com.looker.core.domain.model.PackageName
 import com.looker.installer.installers.Installer
 import com.looker.installer.model.InstallItem
 import com.looker.installer.model.InstallState

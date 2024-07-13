@@ -1,13 +1,13 @@
 package com.looker.installer
 
 import android.content.Context
-import com.looker.core.common.PackageName
 import com.looker.core.common.extension.addAndCompute
 import com.looker.core.common.extension.filter
 import com.looker.core.common.extension.updateAsMutable
 import com.looker.core.datastore.SettingsRepository
 import com.looker.core.datastore.get
 import com.looker.core.datastore.model.InstallerType
+import com.looker.core.domain.model.PackageName
 import com.looker.installer.installers.Installer
 import com.looker.installer.installers.LegacyInstaller
 import com.looker.installer.installers.root.RootInstaller

@@ -4,9 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.util.AndroidRuntimeException
 import androidx.core.net.toUri
-import com.looker.core.common.PackageName
 import com.looker.core.common.SdkCheck
 import com.looker.core.common.cache.Cache
+import com.looker.core.domain.model.PackageName
 import com.looker.installer.model.InstallItem
 import com.looker.installer.model.InstallState
 import kotlin.coroutines.resume

@@ -39,7 +39,7 @@ import com.looker.core.common.extension.systemBarsPadding
 import com.looker.core.common.sdkAbove
 import com.looker.core.datastore.extension.sortOrderName
 import com.looker.core.datastore.model.SortOrder
-import com.looker.core.domain.ProductItem
+import com.looker.droidify.model.ProductItem
 import com.looker.droidify.R
 import com.looker.droidify.databinding.TabsToolbarBinding
 import com.looker.droidify.service.Connection
@@ -207,6 +207,7 @@ class TabsFragment : ScreenFragment() {
             syncRepositoriesMenuItem = add(0, 0, 0, stringRes.sync_repositories)
                 .setIcon(toolbar.context.getMutatedIcon(CommonR.drawable.ic_sync))
                 .setOnMenuItemClickListener {
+//                    SyncWorker.startSyncWork(requireContext())
                     syncConnection.binder?.sync(SyncService.SyncRequest.MANUAL)
                     true
                 }

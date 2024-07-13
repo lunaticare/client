@@ -1,8 +1,7 @@
 package com.looker.network
 
-import com.looker.core.common.DataSize
-import com.looker.core.common.signature.FileValidator
 import com.looker.network.header.HeadersBuilder
+import com.looker.network.validation.FileValidator
 import java.io.File
 import java.net.Proxy
 
@@ -26,6 +25,8 @@ interface Downloader {
     companion object {
         internal const val CONNECTION_TIMEOUT = 30_000L
         internal const val SOCKET_TIMEOUT = 15_000L
+
+        internal const val USER_AGENT = "Droid-ify, v0.6.3"
     }
 }
 
